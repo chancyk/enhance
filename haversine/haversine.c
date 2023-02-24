@@ -115,21 +115,27 @@ void update_record(Record* records, int record_count, char* key, char* value) {
     //printf("\tKEY: %c%c\n", key[0], key[1]);
     //printf("\tVALUE: %s\n", value);
     double val = fast_atof(value);
-    if (key[0] == 'x' && key[1] == '0') {
-        Record *record = &records[record_count];
-        record->x0 = val;
+    if (key[0] == 'x') {
+        if (key[1] == '0') {
+            Record *record = &records[record_count];
+            record->x0 = val;
+        }
+        else if (key[1] == '1') {
+            Record *record = &records[record_count];
+            record->x1 = val;
+        }
     }
-    else if (key[0] == 'y' && key[1] == '0') {
-        Record *record = &records[record_count];
-        record->y0 = val;
-    }
-    else if (key[0] == 'x' && key[1] == '1') {
-        Record *record = &records[record_count];
-        record->x1 = val;
-    }
-    else if (key[0] == 'y' && key[1] == '1') {
-        Record *record = &records[record_count];
-        record->y1 = val;
+    else if (key[0] == 'y') {
+        if (key[1] == '0')
+        {
+            Record *record = &records[record_count];
+            record->y0 = val;
+        }
+        else if (key[1] == '1')
+        {
+            Record *record = &records[record_count];
+            record->y1 = val;
+        }
     }
 }
 
