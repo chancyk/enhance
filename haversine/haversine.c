@@ -139,7 +139,7 @@ int parse_json(Record* records)
     FILE *f = fopen("./data_10000000_flex.json", "r");
     if (f == NULL)
     {
-        ////printf("Error: could not open file\n");
+        printf("Error: could not open file\n");
         exit(1);
     }
 
@@ -251,6 +251,7 @@ double calc_haversine_average(Record* records, int record_count) {
 int main(int argc, char** argv) {
     int num_records = 10000000;
     Record *records = (Record *)malloc(num_records * sizeof(Record));
+
     int t0 = clock();
     int record_count = parse_json(records);
     int t1 = clock();
@@ -258,9 +259,11 @@ int main(int argc, char** argv) {
     int t2 = clock();
 
     free(records);
+    double total_elapsed = (t2 - t0) / (double)CLOCKS_PER_SEC;
     printf("# of records: %d\n", record_count);
     printf("Result: %f\n", average);
-    printf("Input: %f\n", (t1 - t0) / (double)CLOCKS_PER_SEC);
-    printf("Math: %f\n", (t2 - t1) / (double)CLOCKS_PER_SEC);
-    printf("Total: %f\n", (t2 - t0) / (double)CLOCKS_PER_SEC);
+    printf("Input: %fs\n", (t1 - t0) / (double)CLOCKS_PER_SEC);
+    printf("Math: %fs\n", (t2 - t1) / (double)CLOCKS_PER_SEC);
+    printf("Total: %fs\n", total_elapsed);
+    printf("Throughput: %f %s", record_count / total_elapsed, " haversines/second");
 }
