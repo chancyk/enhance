@@ -164,7 +164,33 @@ int parse_json(Record* records)
         for (int i = 0; i < bytes_read; i++)
         {
             char c = buffer[i];
-            if (state == INITIAL)
+            if (state == NUMBER)
+            {
+                if (c >= '0' && c <= '9')
+                {
+                    value[pos++] = c;
+                }
+                else if (c == ',')
+                {
+                    value[pos] = '\0';
+                    state = RECORD;
+                    update_record(records, record_count, key, value);
+                }
+                else if (c == '}')
+                {
+                    value[pos] = '\0';
+                    update_record(records, record_count, key, value);
+                    record_count++;
+                    state = RECORDS;
+                }
+                else if (c == '.' || c == 'e' || c == '-')
+                {
+                    // we're not actually validating the number here,
+                    // there could be character in invalid places.
+                    value[pos++] = c;
+                }
+            }
+            else if (state == INITIAL)
             {
                 if (c == '[')
                 {
@@ -204,32 +230,6 @@ int parse_json(Record* records)
                 else
                 {
                     key[pos++] = c;
-                }
-            }
-            else if (state == NUMBER)
-            {
-                if (c == ',')
-                {
-                    value[pos] = '\0';
-                    state = RECORD;
-                    update_record(records, record_count, key, value);
-                }
-                else if (c == '}')
-                {
-                    value[pos] = '\0';
-                    update_record(records, record_count, key, value);
-                    record_count++;
-                    state = RECORDS;
-                }
-                else if (c >= '0' && c <= '9')
-                {
-                    value[pos++] = c;
-                }
-                else if (c == '.' || c == 'e' || c == '-')
-                {
-                    // we're not actually validating the number here,
-                    // there could be character in invalid places.
-                    value[pos++] = c;
                 }
             }
 
