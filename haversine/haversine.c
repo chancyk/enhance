@@ -4,6 +4,8 @@
 #include <time.h>
 #include <math.h>
 
+#define likely(x)  __builtin_expect((x), 1)
+#define unlikely(x)  __builtin_expect((x), 0)
 
 // enum of states
 typedef enum StateEnum {
@@ -47,37 +49,48 @@ void print_state(State state, char c) {
 */
 double fast_atof(const char *p) {
     double out = 0.0;
+    int sign = 1;
     int e = 0;
     int c;
+    if (*p == '-') {
+        p++;
+        sign = -1;
+    }
     while ((c = *p++) != '\0' && c != '.') {
-        if (c == 'e' || c == 'E')
+        if (c != 'e' && c != 'E') {
+            out = out * 10.0 + (c - '0');
+        }
+        else {
             goto exp;
-        out = out * 10.0 + (c - '0');
+        }
     }
     if (c == '.') {
         while ((c = *p++) != '\0') {
-            if (c == 'e' || c == 'E')
+            if (c != 'e' && c != 'E') {
+                out = out * 10.0 + (c - '0');
+                e = e - 1;
+            }
+            else {
                 goto exp;
-            out = out * 10.0 + (c - '0');
-            e = e - 1;
+            }
         }
     }
 exp:
     if (c == 'e' || c == 'E') {
-        int sign = 1;
+        int exp_sign = 1;
         int i = 0;
         c = *p++;
         if (c == '+')
             c = *p++;
         else if (c == '-') {
             c = *p++;
-            sign = -1;
+            exp_sign = -1;
         }
         while (c >= '0' && c <= '9') {
             i = i * 10 + (c - '0');
             c = *p++;
         }
-        e += i * sign;
+        e += i * exp_sign;
     }
     while (e > 0) {
         out *= 10.0;
@@ -87,7 +100,7 @@ exp:
         out *= 0.1;
         e++;
     }
-    return out;
+    return out * sign;
 }
 
 
@@ -110,30 +123,26 @@ double HaversineOfDegrees(double X0, double Y0, double X1, double Y1, double R)
 }
 
 
-void update_record(Record* records, int record_count, char* key, char* value) {
+void update_record(Record* record, char* key, char* value) {
     //printf("\tCOUNT: %d", record_count);
     //printf("\tKEY: %c%c\n", key[0], key[1]);
     //printf("\tVALUE: %s\n", value);
     double val = fast_atof(value);
     if (key[0] == 'x') {
         if (key[1] == '0') {
-            Record *record = &records[record_count];
             record->x0 = val;
         }
         else if (key[1] == '1') {
-            Record *record = &records[record_count];
             record->x1 = val;
         }
     }
     else if (key[0] == 'y') {
         if (key[1] == '0')
         {
-            Record *record = &records[record_count];
             record->y0 = val;
         }
         else if (key[1] == '1')
         {
-            Record *record = &records[record_count];
             record->y1 = val;
         }
     }
@@ -155,6 +164,7 @@ int parse_json(Record* records)
     char key[2];
     char value[32];
     State state = INITIAL;
+    Record *record = &records[record_count];
 
     int bytes_read;
     char buffer[32768];
@@ -164,7 +174,7 @@ int parse_json(Record* records)
         for (int i = 0; i < bytes_read; i++)
         {
             char c = buffer[i];
-            if (state == NUMBER)
+            if (likely(state == NUMBER))
             {
                 if (c >= '0' && c <= '9')
                 {
@@ -174,14 +184,15 @@ int parse_json(Record* records)
                 {
                     value[pos] = '\0';
                     state = RECORD;
-                    update_record(records, record_count, key, value);
+                    update_record(record, key, value);
                 }
                 else if (c == '}')
                 {
                     value[pos] = '\0';
-                    update_record(records, record_count, key, value);
+                    update_record(record, key, value);
                     record_count++;
                     state = RECORDS;
+                    record = &records[record_count];
                 }
                 else if (c == '.' || c == 'e' || c == '-')
                 {
