@@ -1,6 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define DEBUG 0
+
+#if DEBUG
+#define dbg(x) __builtin_dump_struct(&(x), fprintf, stderr)
+#define debug(text) fprintf(stderr, (text))
+#define debugf(fmt, ...) fprintf(stderr, (fmt), __VA_ARGS__)
+#else
+#define dbg(...)
+#define debug(...)
+#define debugf(...)
+#endif
+
 
 #define InstrBits(x)     ((char)x & (char)0b11111100)  // shave off the last two bits
 #define MoveModeBits(x)  ((char)x & (char)0b11000000)  // top two bits are the move mode
@@ -43,17 +55,17 @@ const char *WORD_REGISTERS[] = {
 
 
 void print_binary(int bits, char byte, const char *end){
-    printf("0b");
+    debug("0b");
     while (bits--)
     {
         if (byte & (char)0b10000000)
-            printf("1");
+            debug("1");
         else
-            printf("0");
+            debug("0");
 
         byte <<= 1;
     }
-    printf(end);
+    debug(end);
 }
 
 
@@ -68,7 +80,7 @@ int main(int argc, char* argv) {
     }
 
     //print_binary(0b00100010);
-    //printf("%d\n", (char)0b10001001);
+    debugf("%d\n", (char)0b10001001);
 
     State state = STATE_INITIAL;
     int num_instr = 19;
@@ -79,27 +91,27 @@ int main(int argc, char* argv) {
         if (bytes_read == 0) {
             break;
         }
-        //printf("READ [-]: %d\n", bytes_read);
+        debugf("READ [-]: %d\n", bytes_read);
         if (bytes_read < 2)
         {
-            //printf("Expected at least 2 bytes.");
+            printf("Expected at least 2 bytes.");
             goto EXIT;
         }
 
         for (int i = 0; i < bytes_read; i++)
         {
-            //printf("BYTE [%2d]: ", (i % 2) + 1); print_binary(8, buffer[i], "\n");
+            debugf("BYTE [%2d]: ", (i % 2) + 1); print_binary(8, buffer[i], "\n");
             if (state == STATE_INITIAL) {
                     if (InstrBits(buffer[i]) == INSTR_MOVE)
                     {
-                        //printf("CMD  [%d]: ", num_instr); print_binary(6, InstrBits(buffer[i]), "dw\n");
+                        debugf("CMD  [%d]: ", num_instr); print_binary(6, InstrBits(buffer[i]), "dw\n");
                         state = STATE_MOVE;
                         instr_byte = buffer[i];
                     }
             }
             else if (state == STATE_MOVE) {
                 char payload = buffer[i];
-                //printf("MOVE [%d]: ", num_instr); print_binary(8, payload, "\n");
+                debugf("MOVE [%d]: ", num_instr); print_binary(8, payload, "\n");
                 if (MoveModeBits(payload) == INSTR_MOVE__MODE_REGREG) {
                     // reg is the destination
                     const char *dest;
@@ -128,7 +140,7 @@ int main(int argc, char* argv) {
                         }
                     }
 
-                    //printf("INST [%d]: ", num_instr);
+                    debugf("INST [%d]: ", num_instr);
                     printf("move %s, %s\n", dest, src);
                 }
                 state = STATE_INITIAL;
