@@ -81,6 +81,7 @@ int main(int argc, char* argv) {
 
     //print_binary(0b00100010);
     debugf("%d\n", (char)0b10001001);
+    printf("bits 16\n\n");
 
     State state = STATE_INITIAL;
     int num_instr = 19;
