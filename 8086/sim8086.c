@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #define InstrBits(x)     ((char)x & (char)0b11111100)  // shave off the last two bits
 #define MoveModeBits(x)  ((char)x & (char)0b11000000)  // top two bits are the move mode
 #define MoveRegValue(x)  (((char)x & (char)0b00111000) >> 3)
 #define MoveRmValue(x)   (((char)x & (char)0b00000111))
 
+
+const char INSTR_MOVE = (char)0b10001000;
 const char INSTR_MOVE__D_BIT = (char)0b00000010;
 const char INSTR_MOVE__W_BIT = (char)0b00000001;
-const char INSTR_MOVE = (char)0b10001000;
 const char INSTR_MOVE__MODE_REGREG = (char)0b11000000;
 
 
@@ -38,6 +40,7 @@ const char *WORD_REGISTERS[] = {
     "si", // 110
     "di"  // 111
 };
+
 
 void print_binary(int bits, char byte, const char *end){
     printf("0b");
