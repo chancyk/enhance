@@ -17,15 +17,26 @@ typedef enum StateEnum {
     STATE_MOVE
 } State;
 
-const char *REGISTERS[] = {
-    "a", // 000
-    "c", // 001
-    "d", // 010
-    "b", // 011
-    "xx", // 100
-    "xx", // 101
-    "xx", // 110
-    "xx"  // 111
+const char *BYTE_REGISTERS[] = {
+    "al", // 000
+    "cl", // 001
+    "dl", // 010
+    "bl", // 011
+    "ah", // 100
+    "ch", // 101
+    "si", // 110
+    "di"  // 111
+};
+
+const char *WORD_REGISTERS[] = {
+    "ax", // 000
+    "cx", // 001
+    "dx", // 010
+    "bx", // 011
+    "sp", // 100
+    "bp", // 101
+    "si", // 110
+    "di"  // 111
 };
 
 void print_binary(int bits, char byte, const char *end){
@@ -57,6 +68,7 @@ int main(int argc, char* argv) {
     //printf("%d\n", (char)0b10001001);
 
     State state = STATE_INITIAL;
+    int num_instr = 19;
     char buffer[64];
     char instr_byte = 0;
     while (1) {
@@ -67,51 +79,57 @@ int main(int argc, char* argv) {
         //printf("READ [-]: %d\n", bytes_read);
         if (bytes_read < 2)
         {
-            printf("Expected at least 2 bytes.");
+            //printf("Expected at least 2 bytes.");
             goto EXIT;
         }
 
         for (int i = 0; i < bytes_read; i++)
         {
-            //printf("BYTE [%d]: ", i); print_binary(8, buffer[i], "\n");
+            //printf("BYTE [%2d]: ", (i % 2) + 1); print_binary(8, buffer[i], "\n");
             if (state == STATE_INITIAL) {
                     if (InstrBits(buffer[i]) == INSTR_MOVE)
                     {
-                        //printf("CMD  [%d]: ", i); print_binary(6, InstrBits(buffer[i]), "dw\n");
+                        //printf("CMD  [%d]: ", num_instr); print_binary(6, InstrBits(buffer[i]), "dw\n");
                         state = STATE_MOVE;
                         instr_byte = buffer[i];
                     }
             }
             else if (state == STATE_MOVE) {
                 char payload = buffer[i];
-                //printf("MOVE [%d]: ", i); print_binary(8, payload, "\n");
+                //printf("MOVE [%d]: ", num_instr); print_binary(8, payload, "\n");
                 if (MoveModeBits(payload) == INSTR_MOVE__MODE_REGREG) {
                     // reg is the destination
                     const char *dest;
                     const char *src;
-                    int is_word = 0;
-                    if (instr_byte & INSTR_MOVE__W_BIT) {
-                        is_word = 1;
-                    }
-                    if (instr_byte & INSTR_MOVE__D_BIT)
-                    {
-                        src = REGISTERS[MoveRmValue(payload)];
-                        dest = REGISTERS[MoveRegValue(payload)];
-                    }
-                    else {
-                        src = REGISTERS[MoveRegValue(payload)];
-                        dest = REGISTERS[MoveRmValue(payload)];
-                    }
+                    int is_word = (instr_byte & INSTR_MOVE__W_BIT) ? 1 : 0;
                     if (is_word) {
-                        //printf("INST [%d]: ", i);
-                        printf("move %sx, %sx\n", dest, src);
+                        if (instr_byte & INSTR_MOVE__D_BIT)
+                        {
+                            src = WORD_REGISTERS[MoveRmValue(payload)];
+                            dest = WORD_REGISTERS[MoveRegValue(payload)];
+                        }
+                        else {
+                            src = WORD_REGISTERS[MoveRegValue(payload)];
+                            dest = WORD_REGISTERS[MoveRmValue(payload)];
+                        }
                     }
                     else {
-                        //printf("INST [%d]: ", i);
-                        printf("move %sl, %sl\n", dest, src);
+                        if (instr_byte & INSTR_MOVE__D_BIT)
+                        {
+                            src = BYTE_REGISTERS[MoveRmValue(payload)];
+                            dest = BYTE_REGISTERS[MoveRegValue(payload)];
+                        }
+                        else {
+                            src = BYTE_REGISTERS[MoveRegValue(payload)];
+                            dest = BYTE_REGISTERS[MoveRmValue(payload)];
+                        }
                     }
+
+                    //printf("INST [%d]: ", num_instr);
+                    printf("move %s, %s\n", dest, src);
                 }
                 state = STATE_INITIAL;
+                num_instr++;
             }
         }
     }
