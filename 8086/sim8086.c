@@ -87,8 +87,8 @@ int main(int argc, char* argv) {
                 //printf("MOVE [%d]: ", i); print_binary(8, payload, "\n");
                 if (MoveModeBits(payload) == INSTR_MOVE__MODE_REGREG) {
                     // reg is the destination
-                    char *dest;
-                    char *src;
+                    const char *dest;
+                    const char *src;
                     int is_word = 0;
                     if (instr_byte & INSTR_MOVE__W_BIT) {
                         is_word = 1;
