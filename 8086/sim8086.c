@@ -18,10 +18,10 @@ typedef enum StateEnum {
 } State;
 
 const char *REGISTERS[] = {
-    "ax", // 000
-    "cx", // 001
-    "dx", // 010
-    "bx", // 011
+    "a", // 000
+    "c", // 001
+    "d", // 010
+    "b", // 011
     "xx", // 100
     "xx", // 101
     "xx", // 110
@@ -64,7 +64,7 @@ int main(int argc, char* argv) {
         if (bytes_read == 0) {
             break;
         }
-        printf("READ [-]: %d\n", bytes_read);
+        //printf("READ [-]: %d\n", bytes_read);
         if (bytes_read < 2)
         {
             printf("Expected at least 2 bytes.");
@@ -84,7 +84,7 @@ int main(int argc, char* argv) {
             }
             else if (state == STATE_MOVE) {
                 char payload = buffer[i];
-                printf("MOVE [%d]: ", i); print_binary(8, payload, "\n");
+                //printf("MOVE [%d]: ", i); print_binary(8, payload, "\n");
                 if (MoveModeBits(payload) == INSTR_MOVE__MODE_REGREG) {
                     // reg is the destination
                     char *dest;
@@ -103,10 +103,12 @@ int main(int argc, char* argv) {
                         dest = REGISTERS[MoveRmValue(payload)];
                     }
                     if (is_word) {
-                        printf("INST [%d]: move %s, %s\n", i, dest, src);
+                        //printf("INST [%d]: ", i);
+                        printf("move %sx, %sx\n", dest, src);
                     }
                     else {
-                        printf("INST [%d]: move %s, %s\n", i, dest, src);
+                        //printf("INST [%d]: ", i);
+                        printf("move %sl, %sl\n", dest, src);
                     }
                 }
                 state = STATE_INITIAL;
